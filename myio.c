@@ -30,7 +30,14 @@ int myread(int fd, int count){
 
     
 }
-/*
-int myopen(){
 
-}*/
+int myopen(char *pathname, int flags, __mode_t mode){
+    //what more do we have to do for open?
+
+    int fd;
+    fd = open(pathname, flags, mode);
+
+
+    return fd;
+}
+
