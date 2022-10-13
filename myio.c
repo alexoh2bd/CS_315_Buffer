@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 
-struct file_info{
+struct file_obj{
     int fd;
     int *readData;
     int *writeData;
@@ -41,8 +41,8 @@ int myread(int fileDescriptor, int count){
 */
 
 
-
-    struct file_info fs;//fs = filestack
+    
+    struct file_obj fs;//fs = filestack
     fs.fd = fileDescriptor;
     fs.readData = malloc(maxsize);
     fs.size = read(fs.fd, fs.readData, count);
