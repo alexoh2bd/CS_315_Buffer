@@ -25,30 +25,28 @@ int maxsize = 1000;
 
 
 
-int myread(int fileDescriptor, int count, struct file_stream stream){
+int myread(struct file_stream stream, int count){
     if(count == 0){
         return 0;   
     }
+   // if(stream.fd == ){
 
-
-    struct file_stream fs;//fs = filestack
-    fs.fd = fileDescriptor;
-    fs.readData = malloc(maxsize);
-    fs.size = read(fs.fd, fs.readData, count);
+    stream.readData = malloc(maxsize);
+    stream.size = read(stream.fd, stream.readData, count);
     
 
-    if(fs.size == -1){
+    if(stream.size == -1){
         perror("Error");
         exit(EXIT_FAILURE);
     }
-    fs.offset+= count;
+    stream.offset+= count;
     
 
+ //   if
 
-
-    printf("Size is %d\n", fs.size);
+    printf("Size is %d\n", stream.size);
     //    printf("Offset is %p\n", offset);
-    printf("Offset is %d\n", fs.offset);
+    printf("Offset is %d\n", stream.offset);
 
 
 
