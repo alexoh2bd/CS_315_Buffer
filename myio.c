@@ -8,85 +8,94 @@
 #include <stdlib.h>
 
 
-
-int buffer[10000];
+struct file_info{
+    int fd;
+    int *readData;
+    int *writeData;
+    int size;
+};
+/*
+int buffer[][];
+int maxsize; 
 int *offset = buffer;    
+*/
+int maxsize = 1000; 
+int offset= 0;
 
 
-
-int myread(int fd, int count){
+int myread(int fileDescriptor, int count){
     if(count == 0){
         return 0;   
-    }/*else if (count >sizeof(buffer))
-    { 
-        buffer.resize(count);
-    }*/
-    
-
-    
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    offset = read(fd, buffer, sizeof(buffer));
-    if(offset == -1){
-        perror("Error");
-        exit(EXIT_FAILURE);
     }
-//  printf("Buffer contains : %d\n",buffer[0]);
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
+  /*  offset = read(fd, buffer, sizeof(buffer));
+    
+    //  printf("Buffer contains : %d\n",buffer[0]);
+
     int size = read(fd, offset, sizeof(buffer));
 
 
     //  printf("Buffer contains : %d\n",buffer[0]);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-    
+
     offset += size/4;
-    printf("Size is %d\n", size);
- //    printf("Offset is %p\n", offset);
-    printf("Offset is %d\n", *offset);
+*/
 
 
 
-    return size;
+    struct file_info fs;//fs = filestack
+    fs.fd = fileDescriptor;
+    fs.readData = malloc(maxsize);
+    fs.size = read(fs.fd, fs.readData, count);
+
+
+    if(fs.size == -1){
+        perror("Error");
+        exit(EXIT_FAILURE);
+    }
+    offset+= fs.size;
+
+
+
+
+    printf("Size is %d\n", fs.size);
+    //    printf("Offset is %p\n", offset);
+    printf("Offset is %d\n", offset);
+
+
+
+    return offset;
 
     
 }
 
-int myopen(char *pathname, int flags, __mode_t mode){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int myopen(char *pathname, int flags){
     //what more do we have to do for open?
 
     int fd;
-    fd = open(pathname, flags, mode);
+    fd = open(pathname, flags);
     if(fd==-1){
         perror("Error");
         exit(EXIT_FAILURE);
     }
-
-=======
-=======
->>>>>>> Stashed changes
-    
-    offset += size/4;
-    printf("Size is %d\n", size);
- //    printf("Offset is %p\n", offset);
-    printf("Offset is %d\n", *offset);
-
-<<<<<<< Updated upstream
-
-=======
-
-
-    return size;
->>>>>>> Stashed changes
-
-    return size;
->>>>>>> Stashed changes
 
     return fd;
 }
