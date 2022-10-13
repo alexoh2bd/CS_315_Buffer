@@ -8,62 +8,51 @@
 #include <stdlib.h>
 
 
-struct file_obj{
+struct file_stream{
     int fd;
     int *readData;
     int *writeData;
     int size;
+    int offset;
 };
 /*
 int buffer[][];
 int maxsize; 
 int *offset = buffer;    
 */
+struct file_stream filearr [];
 int maxsize = 1000; 
-int offset= 0;
 
 
-int myread(int fileDescriptor, int count){
+
+int myread(int fileDescriptor, int count, struct file_stream stream){
     if(count == 0){
         return 0;   
     }
 
-  /*  offset = read(fd, buffer, sizeof(buffer));
-    
-    //  printf("Buffer contains : %d\n",buffer[0]);
 
-    int size = read(fd, offset, sizeof(buffer));
-
-
-    //  printf("Buffer contains : %d\n",buffer[0]);
-
-    offset += size/4;
-*/
-
-
-    
-    struct file_obj fs;//fs = filestack
+    struct file_stream fs;//fs = filestack
     fs.fd = fileDescriptor;
     fs.readData = malloc(maxsize);
     fs.size = read(fs.fd, fs.readData, count);
-
+    
 
     if(fs.size == -1){
         perror("Error");
         exit(EXIT_FAILURE);
     }
-    offset+= fs.size;
-
+    fs.offset+= count;
+    
 
 
 
     printf("Size is %d\n", fs.size);
     //    printf("Offset is %p\n", offset);
-    printf("Offset is %d\n", offset);
+    printf("Offset is %d\n", fs.offset);
 
 
 
-    return offset;
+    return count;
 
     
 }
