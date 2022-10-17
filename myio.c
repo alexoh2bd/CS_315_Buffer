@@ -8,41 +8,73 @@
 #include <stdlib.h>
 
 
-struct file_stream{
-    int fd;
-    int *readData;
-    int *writeData;
-    int size;
-    int offset;
-};
+
 /*
 int buffer[][];
 int maxsize; 
 int *offset = buffer;    
 */
-struct file_stream filearr [];
-int maxsize = 1000; 
 
 
 
-int myread(struct file_stream stream, int count){
+int MAXSIZE = 10000; 
+
+
+int myread(int count, struct file_stream stream, void *dest){// file descriptor, byte count, file_stream
     if(count == 0){
         return 0;   
     }
-   // if(stream.fd == ){
-
-    stream.readData = malloc(maxsize);
-    stream.size = read(stream.fd, stream.readData, count);
     
+
+    if(stream.offset == NULL||stream.offset == 0){// new Stream struct
+        if(count < MAXSIZE){// amount requested is less than max buffer size
+            stream.readData = malloc(MAXSIZE);
+            stream.size = read(stream.fd, stream.readData, MAXSIZE);
+            memcpy(dest,stream.readData, count);
+
+            stream.offset += count;
+
+        }else{// return count amount of bytes requested
+            stream.readData = malloc(count);
+            stream.size = read(stream.fd, stream.readData, count);
+            stream.offset += count;
+            memcpy(dest,stream.readData, count);
+
+
+        }
+    }else{
+        if(stream.offset + count > stream.size){//if overflow, count + stream's offset is greater than buffer size
+            int bytes_read;
+            
+
+
+        }else{
+            memcpy(dest, stream.readData, count);
+
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     if(stream.size == -1){
         perror("Error");
         exit(EXIT_FAILURE);
     }
-    stream.offset+= count;
+    
     
 
- //   if
+
 
     printf("Size is %d\n", stream.size);
     //    printf("Offset is %p\n", offset);

@@ -3,8 +3,18 @@
 
 //int buffer[10000];
 
-int myread(int fd, int count);
-//int fwrite(int fd,);
+typedef struct file_stream{
+    int fd;
+    int *readData;
+    int *writeData;
+    int size;
+    int offset;
+
+
+} file_stream;
+
+
+int myread(int count, struct file_stream stream, void *dest);
 
 
 
