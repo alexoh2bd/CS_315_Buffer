@@ -3,10 +3,21 @@
 
 //int buffer[10000];
 
+
+
+#include <stdio.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+
+
+
 typedef struct file_stream{
     int fd;
-    int *readData;
-    int *writeData;
+    int *DATA;
     int size;
     int offset;
 

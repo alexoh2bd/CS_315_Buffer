@@ -1,21 +1,12 @@
 
 
-#include <stdio.h>
-#include <dirent.h>
-#include <unistd.h>
-#include "myio.h"
-#include <errno.h>
-#include <stdlib.h>
-
-
-
 /*
 int buffer[][];
 int maxsize; 
 int *offset = buffer;    
 */
 
-
+#include "myio.h"
 
 int MAXSIZE = 10000; 
 
@@ -26,45 +17,33 @@ int myread(int count, struct file_stream stream, void *dest){// file descriptor,
     }
     
 
-    if(stream.offset == NULL||stream.offset == 0){// new Stream struct
+    if(stream.offset == 0){// new Stream struct
         if(count < MAXSIZE){// amount requested is less than max buffer size
-            stream.readData = malloc(MAXSIZE);
-            stream.size = read(stream.fd, stream.readData, MAXSIZE);
-            memcpy(dest,stream.readData, count);
+            stream.DATA = malloc(MAXSIZE);
+            stream.size = read(stream.fd, stream.DATA, MAXSIZE);
+            memcpy(dest, (void *)stream.DATA, (unsigned long)count);
 
             stream.offset += count;
 
         }else{// return count amount of bytes requested
-            stream.readData = malloc(count);
-            stream.size = read(stream.fd, stream.readData, count);
+            stream.DATA = malloc(count);
+            stream.size = read(stream.fd, stream.DATA, count);
             stream.offset += count;
-            memcpy(dest,stream.readData, count);
-
+            memcpy(dest, (void *)stream.DATA, (unsigned long)count);
 
         }
     }else{
         if(stream.offset + count > stream.size){//if overflow, count + stream's offset is greater than buffer size
-            int bytes_read;
+            //int bytes_read;
             
 
 
         }else{
-            memcpy(dest, stream.readData, count);
+            memcpy(dest, stream.DATA, count);
 
 
         }
     }
-
-
-
-
-
-
-
-
-
-
-
 
 
     if(stream.size == -1){
@@ -104,7 +83,7 @@ int myread(int count, struct file_stream stream, void *dest){// file descriptor,
 
 
 
-
+/*
 
 int myopen(char *pathname, int flags){
     //what more do we have to do for open?
@@ -128,5 +107,5 @@ int myclose(int fd){
     }
     
 
-}
+}*/
 
