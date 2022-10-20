@@ -25,7 +25,7 @@ typedef struct file_stream{
 } file_stream;
 
 
-int myread(int count, struct file_stream stream, void *dest);
+int myread(int count, struct file_stream *stream, void *dest);
 
 
 

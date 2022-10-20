@@ -11,53 +11,64 @@ int *offset = buffer;
 int MAXSIZE = 10000; 
 
 
-int myread(int count, struct file_stream stream, void *dest){// file descriptor, byte count, file_stream
+int myread(int count, struct file_stream *stream, void *dest){// file descriptor, byte count, file_stream
     if(count == 0){
         return 0;   
     }
-    
+    int tempsize;/*
+    if(stream.offset + count > stream.size){// Offset + amt requested > max size
+        tempsize = read(stream.fd, stream.DATA, count);
+        
+       
+        printf("First Path\n");
 
+    }else{  // ret
+        tempsize = read(stream.fd, stream.DATA, count);
+        
+        printf("Second path\n");
+
+
+    }*/
+   
+/*
     if(stream.offset == 0){// new Stream struct
         if(count < MAXSIZE){// amount requested is less than max buffer size
-            stream.DATA = malloc(MAXSIZE);
-            stream.size = read(stream.fd, stream.DATA, MAXSIZE);
-            memcpy(dest, (void *)stream.DATA, (unsigned long)count);
-
-            stream.offset += count;
-
+            
         }else{// return count amount of bytes requested
-            stream.DATA = malloc(count);
-            stream.size = read(stream.fd, stream.DATA, count);
-            stream.offset += count;
-            memcpy(dest, (void *)stream.DATA, (unsigned long)count);
-
+            
         }
     }else{
         if(stream.offset + count > stream.size){//if overflow, count + stream's offset is greater than buffer size
             //int bytes_read;
             
-
+            printf("3rd PATH\n");
 
         }else{
             memcpy(dest, stream.DATA, count);
 
-
+            printf("fourth path\n");
         }
     }
+*/
 
 
+
+    tempsize = read(stream->fd, stream->DATA, count);
+    memcpy(dest, (void *)stream ->DATA, (unsigned long)count);
+    printf("pre count offset:%d\n", stream->offset);
+    stream ->offset += count;
+    
+    /*
     if(stream.size == -1){
         perror("Error");
         exit(EXIT_FAILURE);
-    }
+    }*/
     
-    
 
-
-
-    printf("Size is %d\n", stream.size);
+    printf("Size is %d\n", tempsize);
     //    printf("Offset is %p\n", offset);
-    printf("Offset is %d\n", stream.offset);
+    printf("Offset is %d\n", stream->offset);
+
 
 
 

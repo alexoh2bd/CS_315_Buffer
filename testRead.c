@@ -1,19 +1,23 @@
 #include "myio.h"
 
-#include <stdio.h>
-#include <fcntl.h>
 
 int main(int argc, char **argv){
-    int fd1 = open("myio.c", 100);
-    int try1 =myread(fd1, 10);
-    int fd2 = open("myio.h", 100);
-    int try2 = myread(fd2, 100);
+    int MAXSIZE = 10000;
+    file_stream thrones;
+    void  *dest = malloc(30000);
+    thrones.offset =0;
+    thrones.fd = open("thrones.pdf", O_RDONLY | O_CREAT);
+    thrones.size = MAXSIZE;
+    thrones.DATA = malloc(MAXSIZE);
+
+    int bytes_read =myread(500, &thrones, dest);
+    printf("%d bytes read\n", bytes_read);
+
+    printf("destination: %p\n", dest);
+    myread(320, &thrones, dest);
+    myread(10000, &thrones, dest);
 
 
 
 
-    printf("Offset is : %d\n", try1+try2);
-  
-
-    
 }
