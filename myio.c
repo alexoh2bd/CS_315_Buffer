@@ -1,6 +1,6 @@
 
 #include "myio.h"
-#define BUFFERSIZE 100000
+#define BUFFERSIZE 10000
 
 int myread(int count, struct file_stream *stream, int *dest){// file descriptor, byte count, file_stream
     if(count == 0){
@@ -8,7 +8,7 @@ int myread(int count, struct file_stream *stream, int *dest){// file descriptor,
     }
   //  int MAXSIZE = 10000;
     int temp = stream->offset + count;
-    int tempsize = 0;// number of bytes read
+    int bytesread = 0;// number of bytes read
     stream->placeholder += stream->offset;
     
     if(temp > stream->size){ // overflow 
@@ -16,14 +16,14 @@ int myread(int count, struct file_stream *stream, int *dest){// file descriptor,
         memcpy((void *)(dest +stream->offset),(void *)stream->readBuff, (unsigned int)(stream->size - stream->offset));
 
         if(temp > (stream->size)){// read and memcpy overflow all at once
-            tempsize = read(stream->fd, stream->readBuff, temp);
+            bytesread = read(stream->fd, stream->readBuff, temp);
             memcpy((void *)(dest + stream->offset),(void *)stream->readBuff, (unsigned int)temp);
             stream-> offset = 0;//set offset to 0
 
             printf("Read and memcpy overflow all at once\n");
         }
         else{ // read MAXSIZE, memcpy temp to dest
-            tempsize = read(stream->fd, stream->readBuff, stream->size);
+            //bytesread = read(stream->fd, stream->readBuff, stream->size);
             memcpy((void *)(dest + stream -> offset),(void *)stream->readBuff, (unsigned int)temp);
             stream-> offset += temp;//add 
 
@@ -31,7 +31,7 @@ int myread(int count, struct file_stream *stream, int *dest){// file descriptor,
         }
     }
     else if(stream->offset ==0){ // New read
-        tempsize = read(stream->fd, stream->readBuff, stream->size);
+        bytesread = read(stream->fd, stream->readBuff, stream->size);
         memcpy((void *)(dest+ stream ->offset), (void *)stream ->readBuff, (unsigned long)count);
         stream->offset += count;
 
@@ -44,11 +44,11 @@ int myread(int count, struct file_stream *stream, int *dest){// file descriptor,
         printf("No READ, memcpy temp to dest\n");
     }
     printf("Count is %d\n", count);
-    printf("Tempsize is %d\n", tempsize);
+    printf("Bytesread is %d\n", bytesread);
     printf("Offset is %d\n", stream->offset);
     printf("Placeholder is %p\n\n", (void *)(dest+stream->offset));
 
-    return tempsize;
+    return bytesread;
 }
 // does not take into account malloc
 
@@ -76,9 +76,9 @@ struct file_stream myopen(char *pathname, int flags){
 
     stream.readBuff = malloc(BUFFERSIZE);
     //add malloc error handling
-    int readReturn = read(stream.fd, stream.readBuff, BUFFERSIZE);
+    stream.size = read(stream.fd, stream.readBuff, BUFFERSIZE);
     // read returns the amount of read_buf read, USE LATER for purposed other than error handling
-    if(readReturn== -1){
+    if(stream.size== -1){
         perror("read");
         exit(EXIT_FAILURE);
     }
