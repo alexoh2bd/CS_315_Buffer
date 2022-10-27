@@ -1,5 +1,6 @@
 
 #include "myio.h"
+#define BUFFERSIZE 100000
 
 int myread(int count, struct file_stream *stream, int *dest){// file descriptor, byte count, file_stream
     if(count == 0){
@@ -60,46 +61,49 @@ int mywrite(int count, struct file_stream *stream, int *dest){
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
 struct file_stream myopen(char *pathname, int flags){
     //what more do we have to do for open?
 
     struct file_stream stream;
+
     stream.offset = 0;
+
     stream.fd = open(pathname, flags);
-
-
-
-
-    return stream;
-
-}*/
-/*
-int myclose(int fd){
-    //what more?
-
-    if(close(fd)==-1){
-        perror("Error");
+    if(stream.fd==-1){
+        perror("fd");
         exit(EXIT_FAILURE);
     }
-    
 
-}*/
+    stream.readBuff = malloc(BUFFERSIZE);
+    //add malloc error handling
+    int readReturn = read(stream.fd, stream.readBuff, BUFFERSIZE);
+    // read returns the amount of read_buf read, USE LATER for purposed other than error handling
+    if(readReturn== -1){
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+    //add a malloc for the write buffer
+
+    return stream;
+}
+
+int myclose(struct file_stream* stream){
+    //what more?
+
+    free(stream->readBuff);
+
+    if(close(stream->fd)==-1){
+        perror("Error");
+        return -1; // is this right?
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
 
