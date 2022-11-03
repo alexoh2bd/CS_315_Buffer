@@ -10,14 +10,15 @@
 
 typedef struct file_stream{
     int fd;
-    int *readBuff;
+    char *readBuf;
     int size;
-    int offset;
+    int readBuf_offset;
+    int fileoffset;
     int placeholder;
 } file_stream;
 
 //int extern MAXSIZE;
-int myread(int count, struct file_stream *stream, int *dest);
+int myread(int count, struct file_stream *stream, char *dest);
 struct file_stream myopen(char *pathname, int flags);
 int myclose(struct file_stream* stream);
 
