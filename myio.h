@@ -7,19 +7,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#define BUFFERSIZE 20
+
 
 typedef struct file_stream{
     int fd;
-    int *readBuff;
-    int size;
-    int offset;
+    char *readBuf;
+    int readBuf_size;
+    int readBuf_offset;
+    char *writeBuf; //write buff size won't differ from BUFFERSIZE ??
+    int writeBuf_offset;
+    int fileoffset;
     int placeholder;
 } file_stream;
 
 //int extern MAXSIZE;
-int myread(int count, struct file_stream *stream, int *dest);
+int myread(int count, struct file_stream *stream, char *dest);
+int mywrite(int count, struct file_stream *stream, char *src);
 struct file_stream myopen(char *pathname, int flags);
 int myclose(struct file_stream* stream);
+int myflush(struct file_stream *stream);
 
 //struct file_stream myopen(char *pathname, int flags);
 
