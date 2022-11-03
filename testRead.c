@@ -21,15 +21,8 @@ int main(int argc, char **argv){
     printf("Myread C\n");
     myread(20000, &john, dest);
 
-    //printf("destination: %p\n", dest);
     printf("Myread D\n");
     myread(40000, &john, dest);
-
-
-/*
-    for(int i = 0; i< destsize; i++){
-        printf("%c", dest[i]);
-    }*/
 
     printf("Myread E\n");
     myread(1300, &john, dest);
@@ -38,6 +31,11 @@ int main(int argc, char **argv){
     myread(3300, &john, dest);
     myread(3030, &john, dest);
 
+    
+    for(int i = 0; i< destsize; i++){
+        printf("%c", dest[i]);
+    }
+
     free(dest);
-    printf("Freed memory\n");
+    printf("\nFreed Memory!\n");
     }

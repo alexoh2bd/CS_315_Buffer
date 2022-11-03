@@ -18,27 +18,34 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             rem -= (stream->size-stream->readBuf_offset);
             stream->fileoffset+=(stream->size-stream->readBuf_offset);
             stream-> readBuf_offset = 0;
+
+            free(stream->readBuf);
+            stream->readBuf = malloc(stream->size);/*
+            if(()==NULL){
+                perror("myread: readbuff malloc");
+                exit(EXIT_FAILURE);
+            }*/
         }
         
         // read MAXSIZE, memcpy temp to dest
         int iter = 0;
         while (rem > stream->size){
-            bytesread += read(stream->fd, (void *)(stream->readBuf+stream->fileoffset), stream->size);
+            bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
             memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)stream->size);
             rem -=stream->size;
             stream->fileoffset += stream->size;
             iter ++;
         }  
-        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->fileoffset), stream->size);
+        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
         memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)rem);
         stream->fileoffset += rem;
         stream->readBuf_offset += rem;
 
-        printf("Read MAXSIZE, memcpy temp to dest %d times\n", iter);
+        printf("Read MAXSIZE to read buffer %d times, memcpy to dest\n", iter);
         
     }
     else if(stream->fileoffset ==0){ // New read from scratch
-        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->fileoffset), stream->size);
+        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
         memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)count);
         stream->fileoffset += count;
         stream->readBuf_offset += count;
@@ -46,7 +53,6 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         printf("New read from scratch\n");
     }
     else{ // No need for READ, memcpy temp to dest
-
         memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)(stream ->readBuf + stream -> readBuf_offset), (unsigned int)count);
         stream -> readBuf_offset += count;
         stream -> fileoffset += count;
