@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#define BUFFERSIZE 20
-
 
 typedef struct file_stream{
     int fd;
@@ -17,6 +15,7 @@ typedef struct file_stream{
     int readBuf_offset;
     char *writeBuf; //write buff size won't differ from BUFFERSIZE ??
     int writeBuf_offset;
+    int size;
     int fileoffset;
     int placeholder;
 } file_stream;

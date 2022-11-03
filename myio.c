@@ -1,60 +1,74 @@
 
 #include "myio.h"
+#define BUFFERSIZE 20000
 
-int myread(int count, struct file_stream *stream, char *dest)
-{// file descriptor, byte count, file_stream
-    
+int myread(int count, struct file_stream *stream, char *dest){// file descriptor, byte count, file_stream
     if(count == 0){
         return 0;   
     }
+    int preoffset = stream->fileoffset;
+    int temp = stream->readBuf_offset + count; 
+    int bytesread = 0; // number of bytes read
+    stream->placeholder += stream->readBuf_offset;
+    
+    if(temp > stream->size){ // overflow    
+        int rem = count; 
+        if (stream->fileoffset!=0){// memcopy remainder of buffer
+            memcpy((void *)((int *)(dest +stream->fileoffset)),(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(stream->size - stream->readBuf_offset));
+            rem -= (stream->size-stream->readBuf_offset);
+            stream->fileoffset+=(stream->size-stream->readBuf_offset);
+            stream-> readBuf_offset = 0;
 
-    int remainder;
-    int dest_offset = 0;
-    int bytesread = 0;// number of bytes read
-    // stream->placeholder += stream->offset; //what is placeholder
-
-    if(stream->readBuf_size==0){
-        if( (stream->readBuf_size = read(stream->fd, stream->readBuf, BUFFERSIZE)) == -1){
-            perror("myopen: read");
-            exit(EXIT_FAILURE);
+            free(stream->readBuf);
+            stream->readBuf = malloc(stream->size);/*
+            if(()==NULL){
+                perror("myread: readbuff malloc");
+                exit(EXIT_FAILURE);
+            }*/
         }
-    }
+        
+        // read MAXSIZE, memcpy temp to dest
+        int iter = 0;
+        while (rem > stream->size){
+            bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
+            memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)stream->size);
+            rem -=stream->size;
+            stream->fileoffset += stream->size;
+            iter ++;
+        }  
+        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
+        memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)rem);
+        stream->fileoffset += rem;
+        stream->readBuf_offset += rem;
 
-    if(stream->readBuf_offset + count <= stream->readBuf_size){ //request is within the buffer
-        memcpy((void *)(dest), (void *)(stream ->readBuf+stream->readBuf_offset), (unsigned long)count);
+        printf("Read MAXSIZE to read buffer %d times, memcpy to dest\n", iter);
+        
+    }
+    else if(stream->fileoffset ==0){ // New read from scratch
+        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
+        memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)count);
+        stream->fileoffset += count;
         stream->readBuf_offset += count;
 
-        printf("memcpy within buffer\n");
-        return count;
+        printf("New read from scratch\n");
     }
-    else{ //(stream->offset + count > stream->buf_size){     //make sure this behaves right
-        printf("buffer is gonna be full\n");
-        remainder = count;
-        while(stream->readBuf_offset + remainder > stream->readBuf_size){
-            dest_offset += stream->readBuf_size - stream->readBuf_offset;
-            memcpy((void *)(dest),(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(stream->readBuf_size - stream->readBuf_offset)); // memcpy whats left in the buffer
-            remainder -= stream->readBuf_size - stream->readBuf_offset;
+    else{ // No need for READ, memcpy temp to dest
+        memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)(stream ->readBuf + stream -> readBuf_offset), (unsigned int)count);
+        stream -> readBuf_offset += count;
+        stream -> fileoffset += count;
+        printf("No READ, memcpy temp to dest\n");
+    }
 
-            if( (bytesread = read(stream->fd, stream->readBuf, BUFFERSIZE)) < 0){
-                perror("myread: read");
-                exit(EXIT_FAILURE);
-            }
-            if(bytesread == EOF){
-                printf("myread: End of file");
-                exit(EXIT_FAILURE);
-            }
-            //what is bytes read is not EOF but just less than BUFFERSIZE
-            stream->readBuf_offset = 0;
-            stream->fileoffset += bytesread;
-        }
-        memcpy((void *)(dest+dest_offset), (void *)(stream->readBuf),remainder); //new buffer contains all remaining data needed
-        stream->readBuf_offset = remainder;
-    }
-    
-    
-    return count; // this might be wrong, look into
+    printf("Count is %d\n", count);
+    printf("Diff is %d\n", stream->fileoffset-preoffset);
+    printf("Bytesread is %d\n", bytesread);
+    printf("File Offset is %d\n", stream->fileoffset);
+    printf("Buffer Offset is %d\n", stream->readBuf_offset);
+    printf("Placeholder is %p\n\n", (void *)(dest+stream->fileoffset));
+    printf("\n\n");
+
+    return bytesread;
 }
-// does not take into account malloc
 
 int mywrite(int count, struct file_stream *stream, char *src)
 {
@@ -126,6 +140,7 @@ struct file_stream myopen(char *pathname, int flags)
 
     stream.readBuf_offset = 0;
     stream.writeBuf_offset = 0;
+    stream.fileoffset = 0;
 
     stream.fd = open(pathname, flags, 0666);
     if(stream.fd==-1){
@@ -139,6 +154,12 @@ struct file_stream myopen(char *pathname, int flags)
 
     if( (stream.readBuf = malloc(BUFFERSIZE)) == NULL){ //read buffer init
         perror("myopen: readBuff: malloc");
+    //add malloc error handling
+  //  stream.size = read(stream.fd, stream.readBuf, BUFFERSIZE);
+    stream.size = BUFFERSIZE;
+    // read returns the amount of read_buf read, USE LATER for purposed other than error handling
+    if(stream.size== -1){
+        perror("read");
         exit(EXIT_FAILURE);
     }
 
@@ -148,6 +169,7 @@ struct file_stream myopen(char *pathname, int flags)
 
     return stream;
 }
+
 
 int myclose(struct file_stream* stream){
     //what more?
