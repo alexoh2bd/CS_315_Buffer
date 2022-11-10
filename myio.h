@@ -26,6 +26,7 @@ int mywrite(int count, struct file_stream *stream, char *src);
 struct file_stream myopen(char *pathname, int flags);
 int myclose(struct file_stream* stream);
 int myflush(struct file_stream *stream);
+int myseek(struct file_stream *stream, off_t offset, int whence);
 
 //struct file_stream myopen(char *pathname, int flags);
 

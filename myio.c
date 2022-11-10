@@ -1,8 +1,15 @@
 
 #include "myio.h"
-#define BUFFERSIZE 20000
+#define BUFFERSIZE 100
 
 int myread(int count, struct file_stream *stream, char *dest){// file descriptor, byte count, file_stream
+
+    if(stream->writeBuf_offset!=0){ //if there is data in write buffer, flush it before doing any reading
+        myflush(stream);
+    }
+
+    //need to add keeping track of fileoffset for myseek
+
     if(count == 0){
         return 0;   
     }
@@ -118,17 +125,40 @@ int myflush(struct file_stream *stream)
     return 1; 
 }
 
-int myseek(int fd, off_t offset, int whence){
+int myseek(struct file_stream *stream, off_t offset, int whence){
 
-    //where is the file position indicator used
+    int readBuf_spaceLeft = BUFFERSIZE - stream->readBuf_offset;
 
-    //when using write sys call to write write buf contents to a field
-    //But write has no parameter on where to write to 
-    
-    //When reading in data from a file
+    if(whence == SEEK_SET){ //set offset to offset
 
+        if(stream->fileoffset+readBuf_spaceLeft >= SEEK_SET){ //if the file offset request is outside of our read buffer, then we have to use lseak
+            if( (lseek(stream->fd, offset, SEEK_CUR)) == -1){
+                perror("myseek");
+                exit(EXIT_FAILURE);
+            }
+            printf("lseak systeam call used\n");
+        }
+        else{
+            stream->readBuf_offset += (stream->fileoffset - offset); // move the readBuf offset to match the request seek
+        }
 
-    
+        stream->fileoffset = offset;
+
+    }
+    else if(whence == SEEK_CUR){ //set offset to current offset plus offset
+        if(offset>=readBuf_spaceLeft){ // if the offset is greater than the space left in the readBuf, then we use lseak
+            if( (lseek(stream->fd, stream->fileoffset + offset, SEEK_SET)) == -1){
+                perror("myseek");
+                exit(EXIT_FAILURE);
+            }
+            printf("lseak systeam call used\n");
+        }
+        else{
+            stream->readBuf_offset += offset; // there is space left in the read buffer to just move readBuf offset
+            stream->fileoffset += offset; 
+        }
+    }
+
     return 1;
 }
 
@@ -154,6 +184,8 @@ struct file_stream myopen(char *pathname, int flags)
 
     if( (stream.readBuf = malloc(BUFFERSIZE)) == NULL){ //read buffer init
         perror("myopen: readBuff: malloc");
+        exit(EXIT_FAILURE);
+    }
     //add malloc error handling
   //  stream.size = read(stream.fd, stream.readBuf, BUFFERSIZE);
     stream.size = BUFFERSIZE;
@@ -163,13 +195,10 @@ struct file_stream myopen(char *pathname, int flags)
         exit(EXIT_FAILURE);
     }
 
-    stream.fileoffset = stream.readBuf_size;
-
     //add a malloc for the write buffer
 
     return stream;
 }
-
 
 int myclose(struct file_stream* stream){
     //what more?
