@@ -7,17 +7,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/param.h>
 
 typedef struct file_stream{
     int fd;
+    int endOfFile;
     char *readBuf;
     int readBuf_size;
     int readBuf_offset;
     char *writeBuf; //write buff size won't differ from BUFFERSIZE ??
     int writeBuf_offset;
-    int size;
     int fileoffset;
-    int placeholder;
 } file_stream;
 
 //int extern MAXSIZE;

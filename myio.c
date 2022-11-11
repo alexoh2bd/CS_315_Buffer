@@ -1,80 +1,89 @@
 
 #include "myio.h"
-#define BUFFERSIZE 100
+#define BUFFERSIZE 1000
 
 int myread(int count, struct file_stream *stream, char *dest){// file descriptor, byte count, file_stream
 
-    if(stream->writeBuf_offset!=0){ //if there is data in write buffer, flush it before doing any reading
-        myflush(stream);
-    }
+    int availableBytes = stream->readBuf_size - stream->readBuf_offset; //available bytes in the hidden buffer
 
-    //need to add keeping track of fileoffset for myseek
+    if(stream->endOfFile == 1){
+        count = MIN(availableBytes, count); //force it to just read this many bytes bc we know they are no more after available bytes
+    }
 
     if(count == 0){
         return 0;   
     }
-    int preoffset = stream->fileoffset;
-    int temp = stream->readBuf_offset + count; 
-    int bytesread = 0; // number of bytes read
-    stream->placeholder += stream->readBuf_offset;
-    
-    if(temp > stream->size){ // overflow    
-        int rem = count; 
-        if (stream->fileoffset!=0){// memcopy remainder of buffer
-            memcpy((void *)((int *)(dest +stream->fileoffset)),(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(stream->size - stream->readBuf_offset));
-            rem -= (stream->size-stream->readBuf_offset);
-            stream->fileoffset+=(stream->size-stream->readBuf_offset);
-            stream-> readBuf_offset = 0;
 
-            free(stream->readBuf);
-            stream->readBuf = malloc(stream->size);/*
-            if(()==NULL){
-                perror("myread: readbuff malloc");
-                exit(EXIT_FAILURE);
-            }*/
+    if(stream->writeBuf_offset!=0){ //if there is data in write buffer, flush it before doing any reading
+        printf("flush call from in read\n");
+        printf("file offset before flush %d\n", stream->fileoffset);
+        myflush(stream);
+    }
+    
+    int nextOffset = stream->readBuf_offset + count; //read buffer offset plus count requested for read
+    int totalBytesRead = 0; 
+    int bytesRead; // number of bytes read
+    
+    if(nextOffset > stream->readBuf_size){ // more data request that buffer contains 
+        printf("new buffer needed\n"); 
+        int remData = count;  // data still needing to be read
+        if (stream->readBuf_offset!=0){// memcopy remainder of buffer
+            printf("copying current buffer \n");
+            memcpy(dest,(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(availableBytes));
+            remData -= availableBytes;
+            totalBytesRead += availableBytes;
+            stream->fileoffset += availableBytes;
         }
         
-        // read MAXSIZE, memcpy temp to dest
-        int iter = 0;
-        while (rem > stream->size){
-            bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
-            memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)stream->size);
-            rem -=stream->size;
-            stream->fileoffset += stream->size;
-            iter ++;
-        }  
-        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
-        memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)rem);
-        stream->fileoffset += rem;
-        stream->readBuf_offset += rem;
+        // read MAXSIZE, memcpy nextOffset to dest
+        int iterations = 0;
+        while (remData > BUFFERSIZE){
+            printf("in while loop, copying data\n");
+            bytesRead = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE);
+            stream->readBuf_size = bytesRead;
+            remData -= stream->readBuf_size;
+            stream->fileoffset += stream->readBuf_size;
 
-        printf("Read MAXSIZE to read buffer %d times, memcpy to dest\n", iter);
+            memcpy((void *)((int *)(dest + totalBytesRead)), (void *)stream ->readBuf, (unsigned int)stream->readBuf_size);
+            totalBytesRead += bytesRead;
+            
+            iterations ++;
+
+            if(bytesRead < BUFFERSIZE){
+                printf("EOF \n\n");
+                stream->endOfFile = 1;
+                return 1;
+                //We have reached EOF
+            }
+            
+        }  
+
+        bytesRead = read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), BUFFERSIZE);
+        stream->readBuf_size = bytesRead;
+        stream->fileoffset += remData;
+        stream->readBuf_offset += remData;
+
+        if(bytesRead < BUFFERSIZE){
+            stream->endOfFile = 1;
+            printf("EOF \n");
+            //We have reached EOF
+        }
+
+        memcpy((void *)((int *)(dest + totalBytesRead)), (void *)stream->readBuf, (unsigned int)remData);
+        totalBytesRead += bytesRead;
+
+        printf("Looped thru buffer %d times\n", iterations);
         
     }
-    else if(stream->fileoffset ==0){ // New read from scratch
-        bytesread += read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), stream->size);
-        memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)stream ->readBuf, (unsigned int)count);
-        stream->fileoffset += count;
-        stream->readBuf_offset += count;
-
-        printf("New read from scratch\n");
-    }
     else{ // No need for READ, memcpy temp to dest
-        memcpy((void *)((int *)(dest+ stream ->fileoffset)), (void *)(stream ->readBuf + stream -> readBuf_offset), (unsigned int)count);
+        memcpy(dest, (void *)(stream->readBuf + stream->readBuf_offset), (unsigned int)count);
         stream -> readBuf_offset += count;
         stream -> fileoffset += count;
-        printf("No READ, memcpy temp to dest\n");
+        totalBytesRead = count;
+        printf("No read sys call, memcpy from buffer to dest\n");
     }
 
-    printf("Count is %d\n", count);
-    printf("Diff is %d\n", stream->fileoffset-preoffset);
-    printf("Bytesread is %d\n", bytesread);
-    printf("File Offset is %d\n", stream->fileoffset);
-    printf("Buffer Offset is %d\n", stream->readBuf_offset);
-    printf("Placeholder is %p\n\n", (void *)(dest+stream->fileoffset));
-    printf("\n\n");
-
-    return bytesread;
+    return totalBytesRead;
 }
 
 int mywrite(int count, struct file_stream *stream, char *src)
@@ -85,7 +94,7 @@ int mywrite(int count, struct file_stream *stream, char *src)
     //option(1)
     //flush write data to the file, then do the full memcpy
 
-    if( (count+stream->writeBuf_offset) > BUFFERSIZE){
+    if( (count+stream->writeBuf_offset) > BUFFERSIZE){ //buffer doesn't have enough space
         printf("buffer is full\n");
         if( (myflush(stream)) == -1){ //or maybe do this manually? are their any differences?
             printf("myflush returned -1");
@@ -93,13 +102,14 @@ int mywrite(int count, struct file_stream *stream, char *src)
         } //fresh buffer
         if(count > BUFFERSIZE){
             write(stream->fd, src, count);
+            stream->fileoffset =+ count;
         }
         else{
             memcpy((stream->writeBuf+stream->writeBuf_offset), src, count);
             stream->writeBuf_offset += count;
         }
     }
-    else{
+    else{ //buffer does have enough space
         memcpy((stream->writeBuf+stream->writeBuf_offset), src, count);
         stream->writeBuf_offset += count;
         //done
@@ -110,17 +120,21 @@ int mywrite(int count, struct file_stream *stream, char *src)
 
 int myflush(struct file_stream *stream)
 {   
-    if ( (write(stream->fd, stream->writeBuf, stream->writeBuf_offset)) ==-1){
+
+    lseek(stream->fd, stream->fileoffset, SEEK_SET);
+
+    if ( (write(stream->fd, stream->writeBuf, stream->writeBuf_offset)) ==-1){ //write writeBuf contents to file
         perror("myflush: write");
         exit(EXIT_FAILURE);
     }
-    free(stream->writeBuf);
+    free(stream->writeBuf); //free the writeBuf
     if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //reinit write buffer
         perror("myflush: writeBuff: malloc");
         exit(EXIT_FAILURE);
     }
     stream->writeBuf_offset=0;
-    // is this all to "empty" the buffer  
+
+    //is there stuff to do with readBuf?
 
     return 1; 
 }
@@ -128,15 +142,27 @@ int myflush(struct file_stream *stream)
 int myseek(struct file_stream *stream, off_t offset, int whence){
 
     int readBuf_spaceLeft = BUFFERSIZE - stream->readBuf_offset;
+    int bytesRead;
 
     if(whence == SEEK_SET){ //set offset to offset
 
-        if(stream->fileoffset+readBuf_spaceLeft >= SEEK_SET){ //if the file offset request is outside of our read buffer, then we have to use lseak
-            if( (lseek(stream->fd, offset, SEEK_CUR)) == -1){
+        if( (stream->fileoffset+readBuf_spaceLeft <= offset) | (offset<stream->fileoffset) ){ //if the file offset request is outside of our read buffer, then we have to use lseak
+            if( (lseek(stream->fd, offset, SEEK_SET)) == -1){
                 perror("myseek");
                 exit(EXIT_FAILURE);
             }
-            printf("lseak systeam call used\n");
+            if( (bytesRead = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE)) == -1){
+                perror("myseek: read");
+                exit(EXIT_FAILURE);
+            }
+            if(bytesRead < BUFFERSIZE){
+                stream->endOfFile = 1;
+                printf("EOF \n");
+                //We have reached EOF
+            }
+            stream->readBuf_size = bytesRead;
+            stream->readBuf_offset = 0;
+            // printf("lseak systeam call used\n");
         }
         else{
             stream->readBuf_offset += (stream->fileoffset - offset); // move the readBuf offset to match the request seek
@@ -146,18 +172,30 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
 
     }
     else if(whence == SEEK_CUR){ //set offset to current offset plus offset
-        if(offset>=readBuf_spaceLeft){ // if the offset is greater than the space left in the readBuf, then we use lseak
+        if( (offset>=readBuf_spaceLeft) | (offset<0) ){ // if the offset is greater than the space left in the readBuf, then we use lseak
             if( (lseek(stream->fd, stream->fileoffset + offset, SEEK_SET)) == -1){
-                perror("myseek");
+                perror("myseek: lseek");
                 exit(EXIT_FAILURE);
             }
-            printf("lseak systeam call used\n");
+            if( (bytesRead = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE)) == -1){
+                perror("myseek: read");
+                exit(EXIT_FAILURE);
+            }
+            if(bytesRead < BUFFERSIZE){
+                stream->endOfFile = 1;
+                printf("EOF \n");
+                //We have reached EOF
+            }
+            stream->readBuf_size = bytesRead;
+            stream->readBuf_offset = 0;
+            // printf("lseak systeam call used\n");
         }
-        else{
+        else{ //offset is positive and within the readBuf
             stream->readBuf_offset += offset; // there is space left in the read buffer to just move readBuf offset
-            stream->fileoffset += offset; 
         }
+        stream->fileoffset =+ offset;
     }
+
 
     return 1;
 }
@@ -171,6 +209,8 @@ struct file_stream myopen(char *pathname, int flags)
     stream.readBuf_offset = 0;
     stream.writeBuf_offset = 0;
     stream.fileoffset = 0;
+    stream.endOfFile = 0;
+    stream.readBuf_size = 0;
 
     stream.fd = open(pathname, flags, 0666);
     if(stream.fd==-1){
@@ -187,14 +227,7 @@ struct file_stream myopen(char *pathname, int flags)
         exit(EXIT_FAILURE);
     }
     //add malloc error handling
-  //  stream.size = read(stream.fd, stream.readBuf, BUFFERSIZE);
-    stream.size = BUFFERSIZE;
-    // read returns the amount of read_buf read, USE LATER for purposed other than error handling
-    if(stream.size== -1){
-        perror("read");
-        exit(EXIT_FAILURE);
-    }
-
+    
     //add a malloc for the write buffer
 
     return stream;

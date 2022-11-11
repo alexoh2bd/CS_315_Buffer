@@ -1,41 +1,66 @@
 #include "myio.h"
 
 int main(int argc, char **argv){
-    printf("write file\n"); 
 
-    char *testdata = malloc(sizeof(char)*12);
-    testdata = "Hello World, hello my name is aiden this is the long test deez nuts yo mama";
+    int destSize = 10000;
+    char *dest = malloc(destSize);
 
     char *testdata2 = malloc(sizeof(char)*12);
-    testdata2 = "Heddo World";
+    testdata2 = "Heddo";
+
+// testing f commands functions
+    // FILE* testfile2 = fopen("testfile.txt", "r+");
+
+    // fread(dest, 1, 10, testfile2);
+    // printf("\nprinting contents of dest: \n");
+    // for(int i = 0; i< destSize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
+
+    // fwrite(testdata2, 1, 5, testfile2);
+
+    // fread(dest, 1, 10, testfile2);
+    // printf("\nprinting contents of dest: \n");
+    // for(int i = 0; i< destSize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
 
 
-    struct file_stream testfile = myopen("testfile.txt", O_RDWR);
-    printf("contents in malloc: %s\n", testdata);
+    file_stream testfile = myopen("testfile.txt", O_RDWR);
 
-    printf("Write buffer offset = %d\n", testfile.writeBuf_offset);
+    myread(10, &testfile, dest);
+    printf("\nprinting contents of dest: \n");
+    for(int i = 0; i< destSize; i++){
+        printf("%c", dest[i]);
+    }
+    printf("\n\n");
 
-    mywrite(11, &testfile, testdata2);
-    mywrite(11, &testfile, testdata2);
+    printf("mywrite\n");
+    mywrite(5, &testfile, testdata2);
+    printf("fileoffset: %d\n", testfile.fileoffset);
+    // printf("flush\n");
+    // myflush(&testfile);
 
-    printf("sangjay gupta test\n");
-    mywrite(60, &testfile, testdata);
+    printf("fileoffset: %d\n", testfile.fileoffset);
+    printf("readbuf offset = %d\n", testfile.readBuf_offset);
+    
+    myread(10, &testfile, dest+10);
 
-    printf("last write\n");
-    mywrite(11, &testfile, testdata2);
+    printf("\nprinting contents of dest: \n");
+    for(int i = 0; i< destSize; i++){
+        printf("%c", dest[i]);
+    }
+    printf("\n\n");
 
-    printf("contents of writeBuf: %s\n", testfile.writeBuf);
-    printf("Write buffer offset = %d\n", testfile.writeBuf_offset);
+//use cat testfile.txt to observe write function
 
-    myflush(&testfile);
+    // printf("contents of writeBuf before flush: %s\n", testfile.writeBuf);
+    // printf("Write buffer offset before flush = %d\n", testfile.writeBuf_offset);
+
+    // myflush(&testfile);
 
     myclose(&testfile);
-
-    char *testing = malloc(100);
-    memcpy(testing, testdata, 11);
-    printf("%s\n", testing);
-    memcpy((testing+11), testdata2, 11);
-    printf("%s\n", testing);
-
 
 }
