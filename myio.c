@@ -52,7 +52,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             if(bytesRead < BUFFERSIZE){
                 printf("EOF \n\n");
                 stream->endOfFile = 1;
-                return 1;
+                return totalBytesRead + bytesRead;
                 //We have reached EOF
             }
             
@@ -95,9 +95,9 @@ int mywrite(int count, struct file_stream *stream, char *src)
     //flush write data to the file, then do the full memcpy
 
     if( (count+stream->writeBuf_offset) > BUFFERSIZE){ //buffer doesn't have enough space
-        printf("buffer is full\n");
+        // printf("buffer is full\n");
         if( (myflush(stream)) == -1){ //or maybe do this manually? are their any differences?
-            printf("myflush returned -1");
+            // printf("myflush returned -1");
             exit(EXIT_FAILURE);
         } //fresh buffer
         if(count > BUFFERSIZE){
@@ -115,7 +115,7 @@ int mywrite(int count, struct file_stream *stream, char *src)
         //done
     }
                         
-    return 1;
+    return count;
 }
 
 int myflush(struct file_stream *stream)
