@@ -5,9 +5,10 @@ int main(int argc, char **argv){
     int destsize = 200000;
     // int destsize2 = 10000;
 
-    file_stream john;
+    file_stream *john;
     // file_stream numbers;
 
+    printf("malloc\n");
     char *dest = malloc(destsize);
     // char *dest2 = malloc(destsize2);
 
@@ -22,32 +23,33 @@ int main(int argc, char **argv){
     // fread(dest2, 1, 10, john);
     // printf("read john2 \n");
 
-//testing myread and myseek
+//              testing myread and myseek
 
+    printf("opening\n");
     john = myopen("john.txt", O_RDWR );
-    printf("file offset = %d\n", john.fileoffset);
+//     printf("file offset = %d\n", john.fileoffset);
 
-//testing reading the entire file
-    // myread(150000, &john, dest);
+// //               testing reading the entire file
+//     // myread(150000, john, dest);
 
-    // numbers = myopen("numbers.txt", O_RDWR);
-    printf("Myread A\n");
-    myread(800, &john, dest);
-    printf("file offset = %d\n", john.fileoffset);
+//     // numbers = myopen("numbers.txt", O_RDWR);
+//     printf("Myread A\n");
+//     myread(800, john, dest);
+//     printf("file offset = %d\n", john.fileoffset);
 
-//testing SEEK_SET and SEEK_CUR
-    myseek(&john, 0, SEEK_SET);
-    // myseek(&john, -800, SEEK_CUR);
+// //           testing SEEK_SET and SEEK_CUR
+//     myseek(john, 0, SEEK_SET);
+//     // myseek(john, -800, SEEK_CUR);
 
-    printf("Read B\n");
-    myread(1000, &john, dest+800);
-    printf("file offset = %d\n", john.fileoffset);
+//     printf("Read B\n");
+//     myread(1000, john, dest+800);
+//     printf("file offset = %d\n", john.fileoffset);
 
-    // myseek(&numbers, 20, SEEK_CUR);
+    // myseek(numbers, 20, SEEK_CUR);
 
-    // myread(20, &numbers, dest);
+    // myread(20, numbers, dest);
 
-//prints all contents read
+//          prints all contents read
     // printf("\nprinting contents of dest: \n");
     // for(int i = 0; i< destsize; i++){
     //     printf("%c", dest[i]);
@@ -60,7 +62,13 @@ int main(int argc, char **argv){
     // }
     // printf("\n\n");
 
-    myclose(&john);
-    // myclose(&numbers);
+    //              testing amount returned
+
+    printf("reading\n");
+    int read1 = myread(100, john, dest);
+    printf("read %d characters\n", read1);
+
+    myclose(john);
+    // myclose(numbers);
     // printf("\nFreed Memory!\n");
     }

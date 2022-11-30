@@ -1,17 +1,17 @@
 
 #include "myio.h"
-#define BUFFERSIZE 1000
+#define BUFFERSIZE 1024
 
 int myread(int count, struct file_stream *stream, char *dest){// file descriptor, byte count, file_stream
+
+    if(count == 0){
+        return 0;   
+    }
 
     int availableBytes = stream->readBuf_size - stream->readBuf_offset; //available bytes in the hidden buffer
 
     if(stream->endOfFile == 1){
         count = MIN(availableBytes, count); //force it to just read this many bytes bc we know they are no more after available bytes
-    }
-
-    if(count == 0){
-        return 0;   
     }
 
     if(stream->writeBuf_offset!=0){ //if there is data in write buffer, flush it before doing any reading
@@ -83,7 +83,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         printf("No read sys call, memcpy from buffer to dest\n");
     }
 
-    return totalBytesRead;
+    return count;
 }
 
 int mywrite(int count, struct file_stream *stream, char *src)
@@ -200,29 +200,30 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
     return 1;
 }
 
-struct file_stream myopen(char *pathname, int flags)
+struct file_stream *myopen(char *pathname, int flags)
 {
     //what more do we have to do for open?
 
-    struct file_stream stream;
+    void *ptr = malloc(sizeof(struct file_stream));
+    struct file_stream *stream = ptr;
 
-    stream.readBuf_offset = 0;
-    stream.writeBuf_offset = 0;
-    stream.fileoffset = 0;
-    stream.endOfFile = 0;
-    stream.readBuf_size = 0;
+    stream->readBuf_offset = 0;
+    stream->writeBuf_offset = 0;
+    stream->fileoffset = 0;
+    stream->endOfFile = 0;
+    stream->readBuf_size = 0;
 
-    stream.fd = open(pathname, flags, 0666);
-    if(stream.fd==-1){
+    stream->fd = open(pathname, flags, 0666);
+    if(stream->fd==-1){
         perror("myopen: open");
         exit(EXIT_FAILURE);
     }
-    if( (stream.writeBuf = malloc(BUFFERSIZE)) == NULL){ //write buffer init
+    if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //write buffer init
         perror("myopen: writeBuff: malloc");
         exit(EXIT_FAILURE);
     }
 
-    if( (stream.readBuf = malloc(BUFFERSIZE)) == NULL){ //read buffer init
+    if( (stream->readBuf = malloc(BUFFERSIZE)) == NULL){ //read buffer init
         perror("myopen: readBuff: malloc");
         exit(EXIT_FAILURE);
     }
@@ -243,6 +244,7 @@ int myclose(struct file_stream* stream){
         perror("myclose: close");
         exit(EXIT_FAILURE);
     }
-
+    free(stream);
+    
     return 0;
 }
