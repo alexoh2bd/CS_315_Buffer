@@ -13,12 +13,18 @@ int main(int argc, char **argv){
     char *dest = malloc(destsize);
     // char *dest2 = malloc(destsize2);
 
-    // FILE *john;
+    FILE *johnReal;
     // printf("before john \n");
-    // john = fopen("john.txt", "r");
+    johnReal = fopen("john.txt", "r");
     // printf("open john \n");
 
-    // fread(dest, 1, 1000000, john);
+    int readAmt = fread(dest, 1, 2000, johnReal);
+    printf("Amount read my fread: %d\n", readAmt);
+    printf("\nprinting contents of dest: \n");
+    for(int i = 0; i< destsize; i++){
+        printf("%c", dest[i]);
+    }
+    // printf("\n\n");
     // printf("read john \n");
 
     // fread(dest2, 1, 10, john);
@@ -32,7 +38,8 @@ int main(int argc, char **argv){
 //     printf("file offset = %d\n", john.fileoffset);
 
 // //               testing reading the entire file
-//     // myread(150000, john, dest);
+    int readAmt = myread(2000, john, dest);
+    printf("Amount read my myread: %d\n", readAmt);
 
 //     // numbers = myopen("numbers.txt", O_RDWR);
 //     printf("Myread A\n");
@@ -51,12 +58,12 @@ int main(int argc, char **argv){
 
     // myread(20, numbers, dest);
 
-//          prints all contents read
-    // printf("\nprinting contents of dest: \n");
-    // for(int i = 0; i< destsize; i++){
-    //     printf("%c", dest[i]);
-    // }
-    // printf("\n\n");
+        //  prints all contents read
+    printf("\nprinting contents of dest: \n");
+    for(int i = 0; i< destsize; i++){
+        printf("%c", dest[i]);
+    }
+    printf("\n\n");
 
     // printf("\nprinting contents of dest2: \n");
     // for(int i = 0; i< destsize2; i++){
@@ -66,9 +73,9 @@ int main(int argc, char **argv){
 
     //              testing amount returned
 
-    printf("reading\n");
-    int read1 = myread(100, numbers, dest);
-    printf("read %d characters\n", read1);
+    // printf("reading\n");
+    // int read1 = myread(100, numbers, dest);
+    // printf("read %d characters\n", read1);
 
     // int read2 = myread(75, numbers, dest);
     // printf("read %d characters\n", read2);
