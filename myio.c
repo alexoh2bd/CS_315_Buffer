@@ -129,16 +129,18 @@ int myflush(struct file_stream *stream)
 
     lseek(stream->fd, stream->fileoffset, SEEK_SET);
 
-    if ( (write(stream->fd, stream->writeBuf, stream->writeBuf_offset)) ==-1){ //write writeBuf contents to file
-        perror("myflush: write");
-        exit(EXIT_FAILURE);
+    if(stream->writeBuf_offset != 0){
+        if((write(stream->fd, stream->writeBuf, stream->writeBuf_offset)) ==-1){ //write writeBuf contents to file
+            perror("myflush: write");
+            exit(EXIT_FAILURE);
+        }
+        free(stream->writeBuf); //free the writeBuf
+        if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //reinit write buffer
+            perror("myflush: writeBuff: malloc");
+            exit(EXIT_FAILURE);
+        }
+        stream->writeBuf_offset=0;
     }
-    free(stream->writeBuf); //free the writeBuf
-    if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //reinit write buffer
-        perror("myflush: writeBuff: malloc");
-        exit(EXIT_FAILURE);
-    }
-    stream->writeBuf_offset=0;
 
     //is there stuff to do with readBuf?
 
@@ -242,6 +244,8 @@ struct file_stream *myopen(char *pathname, int flags)
 
 int myclose(struct file_stream* stream){
     //what more?
+
+    myflush(stream);
 
     free(stream->readBuf);
     free(stream->writeBuf);
