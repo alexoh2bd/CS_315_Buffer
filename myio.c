@@ -104,7 +104,7 @@ int mywrite(int count, struct file_stream *stream, char *src)
         // printf("buffer is full\n");
         if( (myflush(stream)) == -1){ //or maybe do this manually? are their any differences?
             // printf("myflush returned -1");
-            exit(EXIT_FAILURE);
+            return 0;
         } //fresh buffer
         if(count > BUFFERSIZE){
             write(stream->fd, src, count);
@@ -131,13 +131,13 @@ int myflush(struct file_stream *stream)
 
     if(stream->writeBuf_offset != 0){
         if((write(stream->fd, stream->writeBuf, stream->writeBuf_offset)) ==-1){ //write writeBuf contents to file
-            perror("myflush: write");
-            exit(EXIT_FAILURE);
+            // perror("myflush: write"); // for debugging
+            return EOF;
         }
         free(stream->writeBuf); //free the writeBuf
         if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //reinit write buffer
-            perror("myflush: writeBuff: malloc");
-            exit(EXIT_FAILURE);
+            // perror("myflush: writeBuff: malloc"); // for debugging
+            return EOF;
         }
         stream->writeBuf_offset=0;
     }
@@ -156,16 +156,16 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
 
         if( (stream->fileoffset+readBuf_spaceLeft <= offset) | (offset<stream->fileoffset) ){ //if the file offset request is outside of our read buffer, then we have to use lseak
             if( (lseek(stream->fd, offset, SEEK_SET)) == -1){
-                perror("myseek");
-                exit(EXIT_FAILURE);
+                // perror("myseek"); // for debugging
+                return -1;
             }
             if( (bytesRead = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE)) == -1){
-                perror("myseek: read");
-                exit(EXIT_FAILURE);
+                // perror("myseek: read");
+                return -1;
             }
             if(bytesRead < BUFFERSIZE){
                 stream->endOfFile = 1;
-                printf("EOF \n");
+                // printf("EOF \n");
                 //We have reached EOF
             }
             stream->readBuf_size = bytesRead;
@@ -182,16 +182,16 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
     else if(whence == SEEK_CUR){ //set offset to current offset plus offset
         if( (offset>=readBuf_spaceLeft) | (offset<0) ){ // if the offset is greater than the space left in the readBuf, then we use lseak
             if( (lseek(stream->fd, stream->fileoffset + offset, SEEK_SET)) == -1){
-                perror("myseek: lseek");
-                exit(EXIT_FAILURE);
+                // perror("myseek: lseek");
+                return -1;
             }
             if( (bytesRead = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE)) == -1){
-                perror("myseek: read");
-                exit(EXIT_FAILURE);
+                // perror("myseek: read");
+                return -1;
             }
             if(bytesRead < BUFFERSIZE){
                 stream->endOfFile = 1;
-                printf("EOF \n");
+                // printf("EOF \n");
                 //We have reached EOF
             }
             stream->readBuf_size = bytesRead;
@@ -205,7 +205,7 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
     }
 
 
-    return 1;
+    return stream->fileoffset;
 }
 
 struct file_stream *myopen(char *pathname, int flags)
@@ -223,17 +223,17 @@ struct file_stream *myopen(char *pathname, int flags)
 
     stream->fd = open(pathname, flags, 0666);
     if(stream->fd==-1){
-        perror("myopen: open");
-        exit(EXIT_FAILURE);
+        // perror("myopen: open");
+        return NULL;
     }
     if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //write buffer init
-        perror("myopen: writeBuff: malloc");
-        exit(EXIT_FAILURE);
+        // perror("myopen: writeBuff: malloc");
+        return NULL;
     }
 
     if( (stream->readBuf = malloc(BUFFERSIZE)) == NULL){ //read buffer init
-        perror("myopen: readBuff: malloc");
-        exit(EXIT_FAILURE);
+        // perror("myopen: readBuff: malloc");
+        return NULL;
     }
     //add malloc error handling
     
@@ -251,8 +251,8 @@ int myclose(struct file_stream* stream){
     free(stream->writeBuf);
 
     if(close(stream->fd)==-1){
-        perror("myclose: close");
-        exit(EXIT_FAILURE);
+        // perror("myclose: close");
+        return EOF;
     }
 
     // printf("before freeing stream\n");
