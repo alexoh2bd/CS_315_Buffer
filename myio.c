@@ -15,8 +15,8 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
     }
 
     if(stream->writeBuf_offset!=0){ //if there is data in write buffer, flush it before doing any reading
-        printf("flush call from in read\n");
-        printf("file offset before flush %d\n", stream->fileoffset);
+        // printf("flush call from in read\n");
+        // printf("file offset before flush %d\n", stream->fileoffset);
         myflush(stream);
     }
     
@@ -25,10 +25,10 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
     
     if(nextOffset > stream->readBuf_size){ // more data request that buffer contains 
         int bytes_to_buf; //amount of bytes read to buffer
-        printf("new buffer needed\n"); 
+        // printf("new buffer needed\n"); 
         int bytes_to_read = count;  // data still needing to be read
         if (stream->readBuf_offset!=0){// memcopy remainder of buffer
-            printf("copying current buffer \n");
+            // printf("copying current buffer \n");
             memcpy(dest,(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(availableBytes));
             bytes_to_read -= availableBytes;
             totalBytesRead += availableBytes;
@@ -38,7 +38,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         // read MAXSIZE, memcpy nextOffset to dest
         int iterations = 0;
         while (bytes_to_read > BUFFERSIZE){ 
-            printf("in buffer loop, copying data\n");
+            // printf("in buffer loop, copying data\n");
             bytes_to_buf = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE);
             stream->readBuf_size = bytes_to_buf;
 
@@ -46,12 +46,12 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             bytes_to_read -= stream->readBuf_size;
             stream->fileoffset += stream->readBuf_size;
             totalBytesRead += bytes_to_buf;
-            printf("total bytes read1 = %d\n", totalBytesRead);
+            // printf("total bytes read1 = %d\n", totalBytesRead);
             
             iterations ++;
 
             if(bytes_to_buf < BUFFERSIZE){
-                printf("EOF \n\n");
+                // printf("EOF \n\n");
                 stream->endOfFile = 1;
                 break;
                 //We have reached EOF
@@ -66,7 +66,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             if(bytes_to_buf < BUFFERSIZE){
                 stream->endOfFile = 1;
                 bytes_to_read = MIN(bytes_to_buf, bytes_to_read);
-                printf("EOF1 \n");
+                // printf("EOF1 \n");
                 //We have reached EOF
             }
 
@@ -74,10 +74,10 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             stream->fileoffset += bytes_to_read;
             stream->readBuf_offset += bytes_to_read;
             totalBytesRead += bytes_to_read;
-            printf("total bytes read2 = %d\n", totalBytesRead);
+            // printf("total bytes read2 = %d\n", totalBytesRead);
         } 
 
-        printf("Looped thru buffer %d times\n", iterations);
+        // printf("Looped thru buffer %d times\n", iterations);
         
     }
     else{ // No need for READ, memcpy temp to dest
@@ -85,10 +85,10 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         stream -> readBuf_offset += count;
         stream -> fileoffset += count;
         totalBytesRead = count;
-        printf("No read sys call, memcpy from buffer to dest\n");
+        // printf("No read sys call, memcpy from buffer to dest\n");
     }
 
-    printf("total bytes read3 = %d\n", totalBytesRead);
+    // printf("total bytes read3 = %d\n", totalBytesRead);
     return totalBytesRead;
 }
 
@@ -250,6 +250,8 @@ int myclose(struct file_stream* stream){
         perror("myclose: close");
         exit(EXIT_FAILURE);
     }
+
+    // printf("before freeing stream\n");
     free(stream);
 
     return 0;

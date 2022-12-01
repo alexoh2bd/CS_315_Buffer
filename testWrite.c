@@ -2,11 +2,14 @@
 
 int main(int argc, char **argv){
 
-    int destSize = 10000;
-    char *dest = malloc(destSize);
+    // int destSize = 10000;
+    // char *dest = malloc(destSize);
 
-    char *testdata2 = malloc(sizeof(char)*12);
+    char *testdata2 = malloc(5);
     testdata2 = "Heddo";
+
+    char *testdata3 = malloc(100);
+    testdata3 = "HeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddo";
 
 // testing f commands functions
     // FILE* testfile2 = fopen("testfile.txt", "r+");
@@ -28,31 +31,31 @@ int main(int argc, char **argv){
     // printf("\n\n");
 
 
-    file_stream testfile = myopen("testfile.txt", O_RDWR);
+    // file_stream testfile = myopen("testfile.txt", O_RDWR);
 
-    myread(10, &testfile, dest);
-    printf("\nprinting contents of dest: \n");
-    for(int i = 0; i< destSize; i++){
-        printf("%c", dest[i]);
-    }
-    printf("\n\n");
+    // myread(10, &testfile, dest);
+    // printf("\nprinting contents of dest: \n");
+    // for(int i = 0; i< destSize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
 
-    printf("mywrite\n");
-    mywrite(5, &testfile, testdata2);
-    printf("fileoffset: %d\n", testfile.fileoffset);
-    // printf("flush\n");
-    // myflush(&testfile);
+    // printf("mywrite\n");
+    // mywrite(5, &testfile, testdata2);
+    // printf("fileoffset: %d\n", testfile.fileoffset);
+    // // printf("flush\n");
+    // // myflush(&testfile);
 
-    printf("fileoffset: %d\n", testfile.fileoffset);
-    printf("readbuf offset = %d\n", testfile.readBuf_offset);
+    // printf("fileoffset: %d\n", testfile.fileoffset);
+    // printf("readbuf offset = %d\n", testfile.readBuf_offset);
     
-    myread(10, &testfile, dest+10);
+    // myread(10, &testfile, dest+10);
 
-    printf("\nprinting contents of dest: \n");
-    for(int i = 0; i< destSize; i++){
-        printf("%c", dest[i]);
-    }
-    printf("\n\n");
+    // printf("\nprinting contents of dest: \n");
+    // for(int i = 0; i< destSize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
 
 //use cat testfile.txt to observe write function
 
@@ -61,6 +64,17 @@ int main(int argc, char **argv){
 
     // myflush(&testfile);
 
-    myclose(&testfile);
+    //              testing amt written return value
+
+    file_stream *testfile = myopen("testfile.txt", O_RDWR);
+
+    int writeAmt = mywrite(5, testfile, testdata2);
+    printf("amt written: %d\n", writeAmt);
+
+    int writeAmt2 = mywrite(100, testfile, testdata3);
+    printf("amt written2: %d\n", writeAmt2);
+
+    // printf("before close\n");
+    myclose(testfile);
 
 }
