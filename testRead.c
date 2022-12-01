@@ -6,6 +6,7 @@ int main(int argc, char **argv){
     // int destsize2 = 10000;
 
     file_stream *john;
+    file_stream *numbers;
     // file_stream numbers;
 
     printf("malloc\n");
@@ -27,6 +28,7 @@ int main(int argc, char **argv){
 
     printf("opening\n");
     john = myopen("john.txt", O_RDWR );
+    numbers = myopen("numbers.txt", O_RDONLY);
 //     printf("file offset = %d\n", john.fileoffset);
 
 // //               testing reading the entire file
@@ -65,10 +67,14 @@ int main(int argc, char **argv){
     //              testing amount returned
 
     printf("reading\n");
-    int read1 = myread(100, john, dest);
+    int read1 = myread(100, numbers, dest);
     printf("read %d characters\n", read1);
 
+    // int read2 = myread(75, numbers, dest);
+    // printf("read %d characters\n", read2);
+
     myclose(john);
+    myclose(numbers);
     // myclose(numbers);
     // printf("\nFreed Memory!\n");
     }

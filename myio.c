@@ -22,55 +22,60 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
     
     int nextOffset = stream->readBuf_offset + count; //read buffer offset plus count requested for read
     int totalBytesRead = 0; 
-    int bytesRead; // number of bytes read
     
     if(nextOffset > stream->readBuf_size){ // more data request that buffer contains 
+        int bytes_to_buf; //amount of bytes read to buffer
         printf("new buffer needed\n"); 
-        int remData = count;  // data still needing to be read
+        int bytes_to_read = count;  // data still needing to be read
         if (stream->readBuf_offset!=0){// memcopy remainder of buffer
             printf("copying current buffer \n");
             memcpy(dest,(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(availableBytes));
-            remData -= availableBytes;
+            bytes_to_read -= availableBytes;
             totalBytesRead += availableBytes;
             stream->fileoffset += availableBytes;
         }
         
         // read MAXSIZE, memcpy nextOffset to dest
         int iterations = 0;
-        while (remData > BUFFERSIZE){
-            printf("in while loop, copying data\n");
-            bytesRead = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE);
-            stream->readBuf_size = bytesRead;
-            remData -= stream->readBuf_size;
-            stream->fileoffset += stream->readBuf_size;
+        while (bytes_to_read > BUFFERSIZE){ 
+            printf("in buffer loop, copying data\n");
+            bytes_to_buf = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE);
+            stream->readBuf_size = bytes_to_buf;
 
             memcpy((void *)((int *)(dest + totalBytesRead)), (void *)stream ->readBuf, (unsigned int)stream->readBuf_size);
-            totalBytesRead += bytesRead;
+            bytes_to_read -= stream->readBuf_size;
+            stream->fileoffset += stream->readBuf_size;
+            totalBytesRead += bytes_to_buf;
+            printf("total bytes read1 = %d\n", totalBytesRead);
             
             iterations ++;
 
-            if(bytesRead < BUFFERSIZE){
+            if(bytes_to_buf < BUFFERSIZE){
                 printf("EOF \n\n");
                 stream->endOfFile = 1;
-                return totalBytesRead + bytesRead;
+                break;
                 //We have reached EOF
             }
             
         }  
 
-        bytesRead = read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), BUFFERSIZE);
-        stream->readBuf_size = bytesRead;
-        stream->fileoffset += remData;
-        stream->readBuf_offset += remData;
+        if(stream->endOfFile == 0){
+            bytes_to_buf = read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), BUFFERSIZE);
+            stream->readBuf_size = bytes_to_buf;
 
-        if(bytesRead < BUFFERSIZE){
-            stream->endOfFile = 1;
-            printf("EOF \n");
-            //We have reached EOF
-        }
+            if(bytes_to_buf < BUFFERSIZE){
+                stream->endOfFile = 1;
+                bytes_to_read = MIN(bytes_to_buf, bytes_to_read);
+                printf("EOF1 \n");
+                //We have reached EOF
+            }
 
-        memcpy((void *)((int *)(dest + totalBytesRead)), (void *)stream->readBuf, (unsigned int)remData);
-        totalBytesRead += bytesRead;
+            memcpy((void *)((int *)(dest + totalBytesRead)), (void *)stream->readBuf, (unsigned int)bytes_to_read);
+            stream->fileoffset += bytes_to_read;
+            stream->readBuf_offset += bytes_to_read;
+            totalBytesRead += bytes_to_read;
+            printf("total bytes read2 = %d\n", totalBytesRead);
+        } 
 
         printf("Looped thru buffer %d times\n", iterations);
         
@@ -83,7 +88,8 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         printf("No read sys call, memcpy from buffer to dest\n");
     }
 
-    return count;
+    printf("total bytes read3 = %d\n", totalBytesRead);
+    return totalBytesRead;
 }
 
 int mywrite(int count, struct file_stream *stream, char *src)
@@ -245,6 +251,6 @@ int myclose(struct file_stream* stream){
         exit(EXIT_FAILURE);
     }
     free(stream);
-    
+
     return 0;
 }
