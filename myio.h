@@ -1,13 +1,6 @@
 #ifndef __my__io
 #define __my__io
 #include <stdio.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/param.h>
 
 typedef struct file_stream{
     int fd;

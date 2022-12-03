@@ -1,4 +1,6 @@
 #include "myio.h"
+#include <stdlib.h>
+#include <fcntl.h>
 
 int main(int argc, char **argv){
 
@@ -38,7 +40,7 @@ int main(int argc, char **argv){
 //     printf("file offset = %d\n", john.fileoffset);
 
 // //               testing reading the entire file
-    int readAmt = myread(2000, john, dest);
+    readAmt = myread(2000, john, dest);
     printf("Amount read my myread: %d\n", readAmt);
 
 //     // numbers = myopen("numbers.txt", O_RDWR);

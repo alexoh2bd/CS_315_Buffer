@@ -1,5 +1,13 @@
 
 #include "myio.h"
+#include <stdio.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/param.h>
 #define BUFFERSIZE 1024
 
 int myread(int count, struct file_stream *stream, char *dest){// file descriptor, byte count, file_stream
