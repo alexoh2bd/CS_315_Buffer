@@ -12,6 +12,7 @@
 
 int myread(int count, struct file_stream *stream, char *dest){// file descriptor, byte count, file_stream
 
+    // printf("myread\n");
     if(count == 0){
         return 0;   
     }
@@ -32,21 +33,24 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
     int totalBytesRead = 0; 
     
     if(nextOffset > stream->readBuf_size){ // more data request that buffer contains 
+
         int bytes_to_buf; //amount of bytes read to buffer
         // printf("new buffer needed\n"); 
         int bytes_to_read = count;  // data still needing to be read
         if (stream->readBuf_offset!=0){// memcopy remainder of buffer
             // printf("copying current buffer \n");
+            // printf("readBuf_offset = %d, available bytes = %d\n", stream->readBuf_offset, availableBytes);
             memcpy(dest,(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(availableBytes));
             bytes_to_read -= availableBytes;
             totalBytesRead += availableBytes;
             stream->fileoffset += availableBytes;
+            stream->readBuf_offset = 0;
         }
         
         // read MAXSIZE, memcpy nextOffset to dest
         int iterations = 0;
         while (bytes_to_read > BUFFERSIZE){ 
-            // printf("in buffer loop, copying data\n");
+            // printf("Multiple buffer's amt of data needed\n");
             bytes_to_buf = read(stream->fd, (void *)(stream->readBuf), BUFFERSIZE);
             stream->readBuf_size = bytes_to_buf;
 
@@ -82,7 +86,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             stream->fileoffset += bytes_to_read;
             stream->readBuf_offset += bytes_to_read;
             totalBytesRead += bytes_to_read;
-            // printf("total bytes read2 = %d\n", totalBytesRead);
+            printf("total bytes read2 = %d\n", totalBytesRead);
         } 
 
         // printf("Looped thru buffer %d times\n", iterations);
