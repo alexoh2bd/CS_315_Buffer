@@ -5,12 +5,21 @@
 
 int main(int argc, char **argv){
 
+    //          open and malloc
+
     int destsize = 200000;
     // int destsize2 = 10000;
 
     file_stream *john;
-    // file_stream *numbers;
-    // file_stream numbers;
+    john = myopen("john.txt", O_RDWR );
+    file_stream *numbers;
+    numbers = myopen("numbers.txt", O_RDWR);
+
+    // FILE *johnReal;
+    // johnReal = fopen("john.txt", "r");
+
+    // FILE *numbers2;
+    // numbers2 = fopen("numbers2.txt", "r+");
 
     printf("malloc\n");
     char *dest = malloc(destsize);
@@ -33,14 +42,8 @@ int main(int argc, char **argv){
     // fread(dest2, 1, 10, john);
     // printf("read john2 \n");
 
-//              testing myread and myseek
 
-    // printf("opening\n");
-    // john = myopen("john.txt", O_RDWR );
-    // numbers = myopen("numbers.txt", O_RDONLY);
-//     printf("file offset = %d\n", john.fileoffset);
-
-// //               testing reading the entire file
+// //                           testing reading the entire file
     // readAmt = myread(2000, john, dest);
     // printf("Amount read my myread: %d\n", readAmt);
 
@@ -49,7 +52,7 @@ int main(int argc, char **argv){
 //     myread(800, john, dest);
 //     printf("file offset = %d\n", john.fileoffset);
 
-// //           testing SEEK_SET and SEEK_CUR
+// //                   testing SEEK_SET and SEEK_CUR
 //     myseek(john, 0, SEEK_SET);
 //     // myseek(john, -800, SEEK_CUR);
 
@@ -74,6 +77,7 @@ int main(int argc, char **argv){
     // }
     // printf("\n\n");
 
+
     //              testing amount returned
 
     // printf("reading\n");
@@ -86,21 +90,62 @@ int main(int argc, char **argv){
 
 
     //          testing large reads
-    FILE *johnReal;
-    // printf("before john \n");
-    johnReal = fopen("john.txt", "r");
+    
+    // int readAmt;
+    // readAmt = myread(5000, john, dest);
+    // printf("Amount read myread: %d\n\n", readAmt);
 
-    john = myopen("john.txt", O_RDWR );
+    // readAmt = myread(5000, john, dest);
+    // printf("Amount read myread: %d\n\n", readAmt);
 
-    int readAmt;
-    readAmt = myread(5000, john, dest);
-    printf("Amount read myread: %d\n\n", readAmt);
+    // readAmt = myread(5000, john, dest);
+    // printf("Amount read myread: %d\n\n", readAmt);
 
-    readAmt = myread(5000, john, dest);
-    printf("Amount read myread: %d\n\n", readAmt);
+    // printf("\nprinting contents of dest my read: \n");
+    // for(int i = 0; i< destsize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
 
-    readAmt = myread(5000, john, dest);
-    printf("Amount read myread: %d\n\n", readAmt);
+
+    // readAmt = fread(dest, 1, 5000, johnReal);
+    // readAmt = fread(dest, 1, 5000, johnReal);
+    // readAmt = fread(dest, 1, 5000, johnReal);
+
+    // printf("\nprinting contents of dest fread: \n");
+    // for(int i = 0; i< destsize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
+
+    //                  testing reads and writes intermingled
+
+    char *testdata2 = malloc(5);
+    testdata2 = "Heddo";
+
+    // char *testdata3 = malloc(100);
+    // testdata3 = "HeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddoHeddo";
+
+    printf("reading\n");
+    int read1 = myread(10, numbers, dest);
+    printf("read %d characters\n", read1);
+    printf("file offset = %d\n\n", numbers->fileoffset);
+
+    read1 = myread(10, numbers, dest);
+    printf("read %d characters\n", read1);
+    printf("file offset = %d\n\n", numbers->fileoffset);
+
+    int writeAmt2 = mywrite(5, numbers, testdata2);
+    printf("amt written2: %d\n", writeAmt2);
+    printf("file offset = %d\n\n", numbers->fileoffset);
+
+    read1 = myread(10, numbers, dest);
+    printf("read %d characters\n", read1);
+    printf("file offset = %d\n\n", numbers->fileoffset);
+
+    writeAmt2 = mywrite(5, numbers, testdata2);
+    printf("amt written2: %d\n", writeAmt2);
+    printf("file offset = %d\n\n", numbers->fileoffset);
 
     printf("\nprinting contents of dest my read: \n");
     for(int i = 0; i< destsize; i++){
@@ -108,18 +153,23 @@ int main(int argc, char **argv){
     }
     printf("\n\n");
 
+    // read1 = fread(dest, 1, 10, numbers2);
+    // printf("read %d characters\n", read1);
+    // read1 = fread(dest, 1, 10, numbers2);
+    // printf("read %d characters\n", read1);
+    // writeAmt2 = fwrite(testdata2, 1, 10, numbers2);
+    // printf("amt written2: %d\n", writeAmt2);
+    // read1 = fread(dest, 1, 10, numbers2);
+    // printf("read %d characters\n", read1);
 
-    readAmt = fread(dest, 1, 5000, johnReal);
-    readAmt = fread(dest, 1, 5000, johnReal);
-    readAmt = fread(dest, 1, 5000, johnReal);
+    // printf("\nprinting contents of dest my read: \n");
+    // for(int i = 0; i< destsize; i++){
+    //     printf("%c", dest[i]);
+    // }
+    // printf("\n\n");
 
-    printf("\nprinting contents of dest fread: \n");
-    for(int i = 0; i< destsize; i++){
-        printf("%c", dest[i]);
-    }
-    printf("\n\n");
 
     myclose(john);
-    // myclose(numbers);
+    myclose(numbers);
 
 }

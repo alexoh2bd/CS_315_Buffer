@@ -40,7 +40,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         if (stream->readBuf_offset!=0){// memcopy remainder of buffer
             // printf("copying current buffer \n");
             // printf("readBuf_offset = %d, available bytes = %d\n", stream->readBuf_offset, availableBytes);
-            memcpy(dest,(void *)(stream->readBuf+stream->readBuf_offset), (unsigned int)(availableBytes));
+            memcpy(dest,(void *)( stream->readBuf + stream->readBuf_offset ), (unsigned int)(availableBytes));
             bytes_to_read -= availableBytes;
             totalBytesRead += availableBytes;
             stream->fileoffset += availableBytes;
@@ -72,7 +72,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
         }  
 
         if(stream->endOfFile == 0){
-            bytes_to_buf = read(stream->fd, (void *)(stream->readBuf+stream->readBuf_offset), BUFFERSIZE);
+            bytes_to_buf = read(stream->fd, (void *)(stream->readBuf + stream->readBuf_offset), BUFFERSIZE);
             stream->readBuf_size = bytes_to_buf;
 
             if(bytes_to_buf < BUFFERSIZE){
@@ -114,21 +114,21 @@ int mywrite(int count, struct file_stream *stream, char *src)
 
     if( (count+stream->writeBuf_offset) > BUFFERSIZE){ //buffer doesn't have enough space
         // printf("buffer is full\n");
-        if( (myflush(stream)) == -1){ //or maybe do this manually? are their any differences?
+        if( (myflush(stream)) == -1){ 
             // printf("myflush returned -1");
             return 0;
         } //fresh buffer
         if(count > BUFFERSIZE){
             write(stream->fd, src, count);
-            stream->fileoffset =+ count;
+            stream->fileoffset += count;
         }
         else{
-            memcpy((stream->writeBuf+stream->writeBuf_offset), src, count);
+            memcpy((stream->writeBuf + stream->writeBuf_offset), src, count);
             stream->writeBuf_offset += count;
         }
     }
     else{ //buffer does have enough space
-        memcpy((stream->writeBuf+stream->writeBuf_offset), src, count);
+        memcpy((stream->writeBuf + stream->writeBuf_offset), src, count);
         stream->writeBuf_offset += count;
         //done
     }
@@ -146,6 +146,7 @@ int myflush(struct file_stream *stream)
             // perror("myflush: write"); // for debugging
             return EOF;
         }
+        stream->fileoffset += stream->writeBuf_offset;
         free(stream->writeBuf); //free the writeBuf
         if( (stream->writeBuf = malloc(BUFFERSIZE)) == NULL){ //reinit write buffer
             // perror("myflush: writeBuff: malloc"); // for debugging
@@ -166,7 +167,7 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
 
     if(whence == SEEK_SET){ //set offset to offset
 
-        if( (stream->fileoffset+readBuf_spaceLeft <= offset) | (offset<stream->fileoffset) ){ //if the file offset request is outside of our read buffer, then we have to use lseak
+        if( (stream->fileoffset + readBuf_spaceLeft <= offset) | (offset < stream->fileoffset) ){ //if the file offset request is outside of our read buffer, then we have to use lseak
             if( (lseek(stream->fd, offset, SEEK_SET)) == -1){
                 // perror("myseek"); // for debugging
                 return -1;
@@ -216,7 +217,6 @@ int myseek(struct file_stream *stream, off_t offset, int whence){
         stream->fileoffset =+ offset;
     }
 
-
     return stream->fileoffset;
 }
 
@@ -225,6 +225,10 @@ struct file_stream *myopen(char *pathname, int flags)
     //what more do we have to do for open?
 
     void *ptr = malloc(sizeof(struct file_stream));
+    if(ptr==NULL){
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
     struct file_stream *stream = ptr;
 
     stream->readBuf_offset = 0;
