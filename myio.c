@@ -24,8 +24,8 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
     }
 
     if(stream->writeBuf_offset!=0){ //if there is data in write buffer, flush it before doing any reading
-        // printf("flush call from in read\n");
-        // printf("file offset before flush %d\n", stream->fileoffset);
+        printf("flush call from in read\n");
+        printf("file offset before flush %d\n", stream->fileoffset);
         myflush(stream);
     }
     
@@ -86,7 +86,7 @@ int myread(int count, struct file_stream *stream, char *dest){// file descriptor
             stream->fileoffset += bytes_to_read;
             stream->readBuf_offset += bytes_to_read;
             totalBytesRead += bytes_to_read;
-            printf("total bytes read2 = %d\n", totalBytesRead);
+            // printf("total bytes read2 = %d\n", totalBytesRead);
         } 
 
         // printf("Looped thru buffer %d times\n", iterations);
