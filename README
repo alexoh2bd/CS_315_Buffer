@@ -1,3 +1,17 @@
 Authors: Aiden Pape and Alex Oh
 
+
+Wrote a fixed size buffer to optimize the number of syscalls made when making multiple read and write statements. 
+
+The myopen function opens a file and creates a struct which allocates memory for the read and write buffers.
+
+The mywrite and myread functions act similarly to fwrite and fread: they write or read a specified number of bytes while keeping record of the number of bytes written and the resulting offset. 
+
+The myflush function writes the remaining bytes in the write buffer to the destination file.
+
+The myseek function, similar to fseek, resets the file position indicator according to the number of bytes and the state of whence.
+
+The myclose function flushes and frees allocated memory.
+
+
 No currently known bugs
